@@ -20,17 +20,17 @@ export class LocationService {
   async create(createLocationDto: CreateLocationDto) {
     try {
       await validate(createLocationDto);
-      const location = await this.locationModel
-        .findOne({ name: createLocationDto.name })
-        .exec();
+      const location = await this.locationModel.findOne({
+        name: createLocationDto.name,
+      });
       if (location) {
         throw new ConflictException('This location is already exist!');
       }
-      const createdLocation = new this.locationModel(createLocationDto);
-      const newLocation = await createdLocation.save();
+      const createdLocation =
+        await this.locationModel.create(createLocationDto);
       return {
         message: 'Location created successfully!',
-        newLocation,
+        createdLocation,
       };
     } catch (error) {
       throw error;
@@ -39,8 +39,8 @@ export class LocationService {
 
   async getAll() {
     try {
-      const allLocations = await this.locationModel.find().exec();
-      const count = await this.locationModel.countDocuments().exec();
+      const allLocations = await this.locationModel.find();
+      const count = await this.locationModel.countDocuments();
       return {
         data: allLocations,
         count,
@@ -52,7 +52,7 @@ export class LocationService {
 
   async getOne(id: string) {
     try {
-      const location = await this.locationModel.findById(id).exec();
+      const location = await this.locationModel.findById(id);
       if (!location) {
         throw new NotFoundException('This location is not found!');
       }
@@ -68,9 +68,11 @@ export class LocationService {
   ): Promise<{ message: string; updatedLocation: Location }> {
     try {
       await validate(updateLocationDto);
-      const updatedLocation = await this.locationModel
-        .findByIdAndUpdate(id, updateLocationDto, { new: true })
-        .exec();
+      const updatedLocation = await this.locationModel.findByIdAndUpdate(
+        id,
+        updateLocationDto,
+        { new: true },
+      );
       if (!updatedLocation) {
         throw new NotFoundException('Location not found');
       }
@@ -87,9 +89,9 @@ export class LocationService {
     id: string,
   ): Promise<{ message: string; deletedLocation: Location }> {
     try {
-      const deletedLocation = await this.locationModel
-        .findByIdAndDelete(id, { new: true })
-        .exec();
+      const deletedLocation = await this.locationModel.findByIdAndDelete(id, {
+        new: true,
+      });
       if (!deletedLocation) {
         throw new NotFoundException('Location not found');
       }
