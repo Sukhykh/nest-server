@@ -6,8 +6,8 @@ import { LocationService } from '../location/location.service';
 import { AroundHelper, ShortestWay } from './helpers/osm-integration.helper';
 import { OVERPASS_API_URL } from '../common/constants/constants';
 import { ShortestWayDto } from './dto/shortestWayDto.dto';
-import { Edge, Graph, alg } from 'graphlib';
-import { haversineDistance } from '../common/utilities/haversineDistance.utility';
+import { createGraph } from '../common/utilities/createGraph.utility';
+import { findPath } from '../common/utilities/findPath.utility';
 
 @Injectable()
 export class OsmIntegrationService {
@@ -46,82 +46,22 @@ export class OsmIntegrationService {
     try {
       const overpassQuery = ShortestWay.generateQuery(bbox);
       const response = await axios.post(OVERPASS_API_URL, overpassQuery);
-      const pathGraph = new Graph();
-      const roads = response.data.elements.map((road) => road.geometry);
-      for (let outher = 0; outher < roads.length - 1; outher++) {
-        for (let inner = 0; inner < roads[outher].length - 1; inner++) {
-          if (roads[outher][inner + 1]) {
-            const { lat: lat1, lon: lon1 } = roads[outher][inner];
-            const { lat: lat2, lon: lon2 } = roads[outher][inner + 1];
-            const distanceValue = haversineDistance({ lat1, lon1, lat2, lon2 });
-            pathGraph.setEdge(`${lat1},${lon1}`, `${lat2},${lon2}`, {
-              distance: distanceValue,
-            });
-          }
-        }
-      }
-      const findNearestNode = (graph, lat2, lon2) => {
-        let nearestNode = null;
-        let minDistance = Infinity;
-        const allNodes = graph.nodes();
-        for (let i = 0; i < allNodes.length - 1; i++) {
-          const coordinates = allNodes[i].split(',');
-          const [lat1, lon1] = coordinates;
-          const distanceValue = haversineDistance({ lat1, lon1, lat2, lon2 });
-          if (distanceValue < minDistance) {
-            minDistance = distanceValue;
-            nearestNode = coordinates;
-          }
-        }
-        console.log([nearestNode, minDistance]);
-        return [nearestNode, minDistance];
-      };
-      const [nearestFrom, distanceValueFrom] = findNearestNode(
-        pathGraph,
+      const pathGraph = createGraph(response, {
         latFrom,
         lonFrom,
-      );
-      console.log('from', [nearestFrom, distanceValueFrom]);
-      const [nearestTo, distanceValueTo] = findNearestNode(
-        pathGraph,
         latTo,
         lonTo,
-      );
-      console.log('to', [nearestTo, distanceValueTo]);
-      pathGraph.setEdge(
-        `${latFrom},${lonFrom}`,
-        `${nearestFrom[0]},${nearestFrom[1]}`,
-        {
-          distance: distanceValueFrom,
-        },
-      );
-      pathGraph.setEdge(
-        `${nearestTo[0]},${nearestTo[1]}`,
-        `${latTo},${lonTo}`,
-        {
-          distance: distanceValueTo,
-        },
-      );
-      const allPath = alg.dijkstra(
-        pathGraph,
-        `${latFrom},${lonFrom}`,
-        (e: Edge) => (pathGraph.edge(e) as { distance: number }).distance,
-      );
-      let currentCoords = `${latTo},${lonTo}`;
-      const path = [];
-      while (currentCoords !== `${latFrom},${lonFrom}`) {
-        const pathInfo = allPath[currentCoords];
-        if (!pathInfo || pathInfo.distance === null) {
-          break;
-        }
-        path.push(currentCoords);
-        currentCoords = pathInfo.predecessor;
-      }
-      path.push(`${latFrom},${lonFrom}`);
-      const reversedPath = path.reverse();
+      });
+      const shortestPath = findPath(pathGraph, {
+        latFrom,
+        lonFrom,
+        latTo,
+        lonTo,
+      });
       return {
-        path: reversedPath,
-        distance: allPath[`${latTo},${lonTo}`].distance,
+        path: shortestPath.path,
+        distance: shortestPath.distance,
+        unit: 'meter',
       };
     } catch (error) {
       throw error;

@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LocationService } from './location.service';
 import { Location } from './schemas/location.schema';
 import { getModelToken } from '@nestjs/mongoose';
-import { CreateLocationDto } from './dto/create-location.dto';
-import { ConflictException, ValidationPipe } from '@nestjs/common';
-import { configureValidationPipe } from '../common/pipes/validation.pipe';
+// import { CreateLocationDto } from './dto/create-location.dto';
+import { ConflictException } from '@nestjs/common';
+// import {  } from '../common/pipes/validation.pipe';
 import { Model } from 'mongoose';
 
 class MockModel {
