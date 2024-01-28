@@ -5,7 +5,7 @@ import {
   IsString,
   Validate,
 } from 'class-validator';
-import { Coordinates } from 'src/location/dto/coordinates.dto';
+import { Coordinates } from '../../location/dto/coordinates.dto';
 
 export class RundomEnvironmentDto {
   @IsNotEmpty({ message: 'Radius should not be empty' })

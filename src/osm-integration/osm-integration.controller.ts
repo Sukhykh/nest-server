@@ -10,7 +10,7 @@ import { OsmIntegrationService } from './osm-integration.service';
 import { ApiTags } from '@nestjs/swagger';
 import { MyEnvironmentDto } from './dto/myEnvironmentDto.dto';
 import { RundomEnvironmentDto } from './dto/rundomEnvironmentDto.dto';
-// import { ShortestWayDto } from './dto/shortestWayDto.dto';
+import { ShortestWayDto } from './dto/shortestWayDto.dto';
 
 @Controller('osm')
 @ApiTags('Osm')
@@ -38,7 +38,7 @@ export class OsmIntegrationController {
 
   @Get('/way')
   @UsePipes(new ValidationPipe())
-  getShortestWay(): Promise<any> {
-    return this.osmIntegrationService.getShortestWay();
+  getShortestWay(@Body() shortestWayDto: ShortestWayDto): Promise<any> {
+    return this.osmIntegrationService.getShortestWay(shortestWayDto);
   }
 }
